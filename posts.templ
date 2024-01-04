@@ -1,0 +1,136 @@
+package main
+
+import (
+	"fmt"
+	"time"
+)
+templ headerTemplate(name string) {
+	<header data-testid="headerTemplate">
+		<h1 class="grid content-center">{ name }</h1>
+	</header>
+}
+
+templ footerTemplate() {
+	<footer data-testid="footerTemplate">
+		<div>&copy; { fmt.Sprintf("%d", time.Now().Year()) }</div>
+	</footer>
+}
+
+templ navTemplate(selected int) {
+	<nav data-testid="navTemplate">
+		<ul class="flex border-b">
+			<li class={"mr-1", templ.KV("-mb-px", selected == 1)}>
+				<a class={
+					"bg-white inline-block py-2 px-4 font-semibold", 
+					templ.KV("text-blue-500 hover:text-blue-800", selected!=1), 
+					templ.KV("border-l border-t border-r rounded-t text-blue-700",selected == 1)} href="/">
+					Home
+				</a>
+			</li>
+			<li class={"mr-1", templ.KV("-mb-px", selected == 2)}>
+				<a class={
+					"bg-white inline-block py-2 px-4 font-semibold", 
+					templ.KV("text-blue-500 hover:text-blue-800", selected!=2), 
+					templ.KV("border-l border-t border-r rounded-t text-blue-700",selected == 2)} href="/posts">
+					Posts
+				</a>
+			</li>
+
+			<li class={"mr-1", templ.KV("-mb-px", selected == 3)}>
+				<a class={
+					"bg-white inline-block py-2 px-4 font-semibold", 
+					templ.KV("text-blue-500 hover:text-blue-800", selected!=3), 
+					templ.KV("border-l border-t border-r rounded-t text-blue-700",selected ==3)} href="/add-post">
+					Add Post
+				</a>
+			</li>
+		</ul>
+	</nav>
+}
+
+templ layout(name string, s int) {
+	<html class="h-full flex">
+		<head>
+			<script src="https://cdn.tailwindcss.com?plugins=forms,typography,aspect-ratio,line-clamp"></script>
+			<script src="/assets/js/htmx.min.js"></script>
+			<script src="https://polyfill.io/v3/polyfill.min.js?features=es6"></script>
+			<script id="MathJax-script" async src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-mml-chtml.js"></script>
+			<title>{ name }</title>
+		</head>
+		<body class="antialiased min-h-full min-w-full flex flex-col">
+			@headerTemplate(name)
+			@navTemplate(s)
+			<main class="grow">
+				{ children... }
+			</main>
+		</body>
+		@footerTemplate()
+	</html>
+}
+
+templ postsTemplate(posts []Post) {
+	<div class="flex-col" id="postsList" data-testid="postsTemplate">
+		for _, p := range posts {
+			<div class="basis-1/4 md:basis-1/3">{ p.Title }</div>
+		}
+	</div>
+}
+
+var dpost = "Start drafting!"
+
+templ addPosts(){
+	<form class="w-full max-w-sm" id="draftForm" method="POST" action="/posts" hx-post="/post" hx-select="#draftForm" hx-swap="outerHTML">
+		<div class="md:flex md:items-center mb-6">
+			<div class="md:w-1/3">
+				<label class="block text-gray-500 font-bold md:text-right mb-1 md:mb-0 pr-4" for="title">
+					Title
+				</label>
+			</div>
+			<div class="md:w-2/3">
+				<input class="bg-gray-200 appearance-none border-2 border-gray-200 rounded w-full py-2 px-4 text-gray-700 leading-tight focus:outline-none focus:bg-white focus:border-purple-500" type="text" name="title"/>
+			</div>
+		</div>
+		<div class="md:flex md:items-center mb-6">
+			<div class="md:w-1/3">
+				<label class="block text-gray-500 font-bold md:text-right mb-1 md:mb-0 pr-4" for="content">
+					Cotent
+				</label>
+			</div>
+			<div class="md:w-2/3">
+				<textarea nclass="bg-gray-200 appearance-none border-2 border-gray-200 rounded w-full py-2 px-4 text-gray-700 leading-tight focus:outline-none focus:bg-white focus:border-purple-500" name="content" rows="10" cols="50">Start Drafting!</textarea>
+			</div>
+		</div>
+		<div class="md:flex md:items-center">
+			<div class="md:w-1/3"></div>
+			<div class="md:w-2/3">
+				<button class="shadow bg-purple-500 hover:bg-purple-400 focus:shadow-outline focus:outline-none text-white font-bold py-2 px-4 rounded" type="submit">
+					Submit
+				</button>
+			</div>
+		</div>
+	</form>
+}
+
+const ls = `When \(a \ne 0\), there are two solutions to \(ax^2 + bx + c = 0\) and they are
+			\[x = {-b  \pm \sqrt{b^2-4ac} \over 2a}.\]`
+
+templ home() {
+	@layout("Home", 1) {
+		<p>
+			{ls}
+		</p>
+		<div data-testid="homeTemplate">Welcome to my website.</div>
+	}
+}
+
+templ addPost(){
+	@layout("Add Post", 3) {
+		@addPosts()
+	}
+}
+
+templ posts(posts []Post) {
+	@layout("Posts", 2) {
+		@postsTemplate(posts)
+	}
+}
